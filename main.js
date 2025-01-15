@@ -1,12 +1,56 @@
 document.addEventListener("DOMContentLoaded", function () {
   const app = document.getElementById("app");
-  // generate current date in format yyyy-mm-d
-  const date = new Date(); // Current date
-  // Get the time in milliseconds since Unix epoch and convert to days
-  const absoluteDays = Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-  const random = new RNG(absoluteDays);
-  generatePractice(app, random);
+  const dayIndex = dateToIndex(new Date());
+  new PracticeGenerator(app, dayIndex).generate();
 });
+
+const DAY_OFFSET = 20000;
+const DAY_IN_SECONDS = 1000 * 60 * 60 * 24;
+const dateToIndex = (date) => {
+  return Math.floor(date.getTime() / DAY_IN_SECONDS) - DAY_OFFSET;
+};
+
+const indexToDate = (index) => {
+  return new Date(index + DAY_OFFSET) * DAY_IN_SECONDS;
+};
+
+const STORAGE_KEY = "practice-generator-progress-v1";
+
+class Progress {
+  constructor() {
+    this.progress = {};
+    const serialized = localStorage.getItem(STORAGE_KEY);
+    if (serialized) {
+      for (const item of serialized.split(",")) {
+        const [key, value] = item.split(":").map((v) => parseInt(v, 10));
+        this.progress[key] = value;
+      }
+    }
+  }
+
+  isDone(dayIndex, exerciseIndex) {
+    const mask = 1 << exerciseIndex;
+    return (this.progress[dayIndex] & mask) !== 0;
+  }
+
+  markDone(dayIndex, exerciseIndex, done) {
+    const mask = 1 << exerciseIndex;
+    if (done) {
+      this.progress[dayIndex] |= mask;
+    } else {
+      this.progress[dayIndex] &= ~mask;
+    }
+    console.log(this.progress);
+    this.saveProgress();
+  }
+
+  saveProgress() {
+    const serialized = Object.entries(this.progress)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(",");
+    localStorage.setItem(STORAGE_KEY, serialized);
+  }
+}
 
 const MAJOR_INTERVALS = [2, 2, 1, 2, 2, 2, 1];
 const MINOR_INTERVALS = [2, 1, 2, 2, 1, 2, 2];
@@ -129,18 +173,65 @@ const isFlat = (note) => note.slice(1, 2) === "b";
 
 const isSharp = (note) => note.slice(1, 2) === "#";
 
-const generatePractice = (app, random) => {
-  app.innerHTML = "";
+class IndexIterator {
+  constructor() {
+    this.index = 0;
+  }
 
-  const keyIndex = random.nextRange(0, ALL_KEYS_ARRAY.length);
-  const scale = random.nextFloat() > 0.2 ? "Major" : "Minor";
-  console.log("keyIndex:", keyIndex, "scale:", scale);
-  const h2Scale = document.createElement("h2");
-  h2Scale.innerHTML = "Scale";
-  app.appendChild(h2Scale);
-  const scaleSheet = generateScaleSheet(scale, keyIndex);
-  app.appendChild(scaleSheet);
-};
+  next() {
+    return this.index++;
+  }
+}
+
+class PracticeGenerator {
+  constructor(container, dayIndex) {
+    this.container = container;
+    this.dayIndex = dayIndex;
+    this.random = new RNG(dayIndex);
+    this.progress = new Progress();
+    this.indexIterator = new IndexIterator();
+  }
+
+  generate() {
+    this.container.innerHTML = "";
+    this.addSimpleButBeautiful();
+    this.addScale();
+  }
+
+  addSimpleButBeautiful() {
+    this.addTitle("Simple but Beautiful");
+    this.container.appendChild(generateScaleSheet("Major", 0));
+    this.addProgressCheckbox();
+  }
+
+  addScale() {
+    const keyIndex = this.random.nextRange(0, ALL_KEYS_ARRAY.length);
+    const scale = this.random.nextFloat() > 0.2 ? "Major" : "Minor";
+    this.addTitle("Scale");
+    this.container.appendChild(generateScaleSheet(scale, keyIndex));
+    this.addProgressCheckbox();
+  }
+
+  addTitle(title) {
+    const h2 = document.createElement("h2");
+    h2.textContent = title;
+    this.container.appendChild(h2);
+  }
+
+  addProgressCheckbox() {
+    const { container, indexIterator, dayIndex, progress } = this;
+    const exerciseIndex = indexIterator.next();
+
+    const checkbox = document.createElement("input");
+    checkbox.style.float = "right";
+    checkbox.type = "checkbox";
+    checkbox.checked = progress.isDone(dayIndex, exerciseIndex);
+    checkbox.onclick = () => {
+      progress.markDone(dayIndex, exerciseIndex, checkbox.checked);
+    };
+    container.appendChild(checkbox);
+  }
+}
 
 const generateScaleSheet = (scale, index) => {
   const { shortcut, startNote, intervals, startKey } = SCALES[scale];
