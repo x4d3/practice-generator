@@ -200,7 +200,8 @@ class PracticeGenerator {
 
   addSimpleButBeautiful() {
     this.addTitle("Simple but Beautiful");
-    this.container.appendChild(generateScaleSheet("Major", 0));
+    const keyIndex = this.random.nextRange(0, ALL_KEYS_ARRAY.length);
+    this.container.appendChild(generateSimpleButBeautiful(keyIndex));
     this.addProgressCheckbox();
   }
 
@@ -233,6 +234,35 @@ class PracticeGenerator {
   }
 }
 
+const generateSimpleButBeautiful = (index) => {
+  const { shortcut, startNote, startKey } = SCALES.Major;
+  const relativeIndex = ALL_KEYS[startKey].int_val + index;
+  const key = getKey(relativeIndex);
+  const firstNote = safeArrayAccess(ALL_KEYS_ARRAY, index + ALL_KEYS[startNote].int_val);
+
+  let shift = ALL_KEYS[getKey(index)].root_index;
+  if (shift > 4) {
+    shift -= 7;
+  }
+  const indexes = [0, -1, -2, -1, 0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, -1, -2, -1, 0].map((i) => shift + i);
+
+  const notes = generatesNotes(indexes);
+  return drawNotes(key, `${formatNote(firstNote)} ${shortcut}`, notes);
+};
+
+const NOTES = ["C", "D", "E", "F", "G", "A", "B"];
+
+const generatesNotes = (indexes) => {
+  return indexes.map((index) => {
+    const octave = Math.floor(index / 7) + 4;
+    const noteLetter = safeArrayAccess(NOTES, index);
+    return new StaveNote({
+      keys: [`${noteLetter}/${octave}`],
+      duration: "8",
+    });
+  });
+};
+
 const generateScaleSheet = (scale, index) => {
   const { shortcut, startNote, intervals, startKey } = SCALES[scale];
   const relativeIndex = ALL_KEYS[startKey].int_val + index;
@@ -244,27 +274,29 @@ const generateScaleSheet = (scale, index) => {
   if (isFlat(firstNote) && accidentals.some(isSharp)) {
     firstNote = ALL_KEYS[firstNote].equivalent;
   }
+  const notes = generatesScale(firstNote, intervals, accidentals, octave);
+  return drawNotes(key, `${formatNote(firstNote)} ${shortcut}`, notes);
+};
 
+function drawNotes(key, annotation, notes) {
   const musicSheetDiv = document.createElement("div");
-
   musicSheetDiv.classList.add("music-sheet");
   const renderer = new Renderer(musicSheetDiv, Renderer.Backends.SVG);
   const context = renderer.getContext();
   renderer.resize(600, 200);
   const stave = new Stave(0, 25, 600);
   stave.addClef("treble").addKeySignature(key).setContext(context).draw();
-  const notes = generatesScale(firstNote, intervals, accidentals, octave);
-  if (shortcut) {
+  if (annotation) {
     const title = document.createElement("div");
-    title.innerHTML = `${formatNote(firstNote)} ${shortcut}`;
+    title.textContent = annotation;
     title.style.position = "absolute";
     musicSheetDiv.insertBefore(title, musicSheetDiv.firstChild);
   }
-  Formatter.FormatAndDraw(context, stave, notes);
+  Formatter.FormatAndDraw(context, stave, notes, { auto_beam: true });
   return musicSheetDiv;
-};
+}
 
-const { Renderer, Stave, Stem, StaveNote, Accidental, Formatter, Voice } = Vex.Flow;
+const { Renderer, Stave, StaveNote, Accidental, Formatter } = Vex.Flow;
 
 function parseNote(note) {
   return {
