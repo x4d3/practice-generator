@@ -246,22 +246,20 @@ const generateSimpleButBeautiful = (index) => {
   }
   const indexes = [0, -1, -2, -1, 0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, -1, -2, -1, 0].map((i) => shift + i);
 
-  const notes = generatesNotes(indexes);
-  return drawNotes(key, `${formatNote(firstNote)} ${shortcut}`, notes);
+  const notes = indexes.map((index) => {
+      const octave = Math.floor(index / 7) + 4;
+      const noteLetter = safeArrayAccess(NOTES, index);
+      return new StaveNote({
+          keys: [`${noteLetter}/${octave}`],
+          duration: "8",
+      });
+  });
+  const beams = [new Beam(notes)];
+  const annotation = `${formatNote(firstNote)} ${shortcut}`;
+  return drawNotes({ key, annotation, notes, beams });
 };
 
 const NOTES = ["C", "D", "E", "F", "G", "A", "B"];
-
-const generatesNotes = (indexes) => {
-  return indexes.map((index) => {
-    const octave = Math.floor(index / 7) + 4;
-    const noteLetter = safeArrayAccess(NOTES, index);
-    return new StaveNote({
-      keys: [`${noteLetter}/${octave}`],
-      duration: "8",
-    });
-  });
-};
 
 const generateScaleSheet = (scale, index) => {
   const { shortcut, startNote, intervals, startKey } = SCALES[scale];
@@ -275,10 +273,11 @@ const generateScaleSheet = (scale, index) => {
     firstNote = ALL_KEYS[firstNote].equivalent;
   }
   const notes = generatesScale(firstNote, intervals, accidentals, octave);
-  return drawNotes(key, `${formatNote(firstNote)} ${shortcut}`, notes);
+  const annotation = `${formatNote(firstNote)} ${shortcut}`;
+  return drawNotes({ key, annotation, notes });
 };
 
-function drawNotes(key, annotation, notes) {
+function drawNotes({ key, annotation, notes, beams = [] } = {}) {
   const musicSheetDiv = document.createElement("div");
   musicSheetDiv.classList.add("music-sheet");
   const renderer = new Renderer(musicSheetDiv, Renderer.Backends.SVG);
@@ -292,11 +291,13 @@ function drawNotes(key, annotation, notes) {
     title.style.position = "absolute";
     musicSheetDiv.insertBefore(title, musicSheetDiv.firstChild);
   }
-  Formatter.FormatAndDraw(context, stave, notes, { auto_beam: true });
+
+  Formatter.FormatAndDraw(context, stave, notes);
+  beams.forEach((beam) => beam.setContext(context).draw());
   return musicSheetDiv;
 }
 
-const { Renderer, Stave, StaveNote, Accidental, Formatter } = Vex.Flow;
+const { Renderer, Stave, StaveNote, Beam, Accidental, Formatter } = Vex.Flow;
 
 function parseNote(note) {
   return {
