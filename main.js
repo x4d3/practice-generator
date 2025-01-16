@@ -194,8 +194,10 @@ class PracticeGenerator {
 
   generate() {
     this.container.innerHTML = "";
+    this.addButton("🎲 Randomize", () => this.generate());
     this.addSimpleButBeautiful();
     this.addScale();
+    this.addExcerpt();
   }
 
   addSimpleButBeautiful() {
@@ -211,6 +213,12 @@ class PracticeGenerator {
     this.addTitle("Scale");
     this.container.appendChild(generateScaleSheet(scale, keyIndex));
     this.addProgressCheckbox();
+  }
+
+  addExcerpt() {
+    this.addTitle("Excerpt");
+    this.addProgressCheckbox();
+    this.container.appendChild(generateExcerpt(this.random));
   }
 
   addTitle(title) {
@@ -232,6 +240,13 @@ class PracticeGenerator {
     };
     container.appendChild(checkbox);
   }
+
+  addButton(title, callback) {
+    const button = document.createElement("button");
+    button.textContent = title;
+    button.onclick = callback;
+    this.container.appendChild(button);
+  }
 }
 
 const generateSimpleButBeautiful = (index) => {
@@ -247,12 +262,12 @@ const generateSimpleButBeautiful = (index) => {
   const indexes = [0, -1, -2, -1, 0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, -1, -2, -1, 0].map((i) => shift + i);
 
   const notes = indexes.map((index) => {
-      const octave = Math.floor(index / 7) + 4;
-      const noteLetter = safeArrayAccess(NOTES, index);
-      return new StaveNote({
-          keys: [`${noteLetter}/${octave}`],
-          duration: "8",
-      });
+    const octave = Math.floor(index / 7) + 4;
+    const noteLetter = safeArrayAccess(NOTES, index);
+    return new StaveNote({
+      keys: [`${noteLetter}/${octave}`],
+      duration: "8",
+    });
   });
   const beams = [new Beam(notes)];
   const annotation = `${formatNote(firstNote)} ${shortcut}`;
@@ -335,6 +350,44 @@ const generatesScale = (firstNote, intervals, accidentals, octave) => {
     note = nextNote;
   }
   return notes;
+};
+
+const EXCERPTS = {
+  "Beethoven: Sonata, Op. 17": "https://www.hornmatters.com/solo-parts/Beethoven_-_Sonata_Op17_Horn.pdf",
+  "Cherubini: Sonata No. 2": "https://www.hornmatters.com/solo-parts/Cherubini-2_Sonatas_horn.pdf",
+  "Mozart: Concerto No. 1 in D, K. 412":
+    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.1_horn_part.pdf",
+  "Mozart: Concerto No. 2 in E-flat, K. 417":
+    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.2_horn_part.pdf",
+  "Mozart: Concerto No. 3 in E-flat, K 447":
+    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.3_horn_part.pdf",
+  "Mozart: Concerto No. 4 in E-flat, K. 495":
+    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.4_horn_part.pdf",
+  "Saint-Saens: Morceau de Concert":
+    "https://www.hornmatters.com/solo-parts/Saint-saens-Morceau_De_Concert_orig_horn.pdf",
+  "Schumann: Adagio and Allegro, Op. 70":
+    "https://www.hornmatters.com/solo-parts/Schumann_Adagio_and_Allegro_Op.70_parts.pdf",
+  "Schumann: Konzertstuck for four horns and orchestra":
+    "https://www.hornmatters.com/solo-parts/Schumann_Concertpiece_for_4_Horns_Op.86_horns.pdf",
+  "Strauss, F.: Nocturno, Op. 7": "https://www.hornmatters.com/solo-parts/Strauss-F-Nocturno-Op-7-horn.pdf",
+  "Strauss, F.: Concerto, Op. 8": "https://www.hornmatters.com/solo-parts/Strauss-F-Concerto-Op-8-horn.pdf",
+  "Strauss, R.: Concerto No. 1, Op. 11": "https://www.hornmatters.com/solo-parts/Strauss-R-Concerto-Op-11-horn.pdf",
+  "Weber: Concertino in E": "https://www.hornmatters.com/solo-parts/Weber-Concertino__Op.45-Horn_Part.pdf",
+};
+
+const generateExcerpt = (random) => {
+  const [title, url] = random.choice(Object.entries(EXCERPTS));
+  const div = document.createElement("div");
+  div.innerHTML = `
+  <h3>${title}</h3>
+  <object data="${url}" type="application/pdf" width="100%" height="800px">
+        <div class="loading">
+          <span class="loader"></span>
+        </div>
+    </object>
+  `;
+
+  return div;
 };
 
 const mod = (input, n) => ((input % n) + n) % n;
