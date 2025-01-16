@@ -5,7 +5,7 @@ FTP_USER := $(FTP_USERNAME)
 FTP_PASS := $(FTP_PASSWORD)
 
 # Files to upload
-FILES := index.html main.js simple.css vexflow@4.2.3.js
+FILES := index.html main.js simple.css vexflow@4.2.3.js preview.png
 
 .PHONY: upload
 upload:
