@@ -1,2 +1,5 @@
-vexflow@4.2.3.js
-simple.css
+public/vexflow@4.2.3.js
+public/simple.css
+public/viewer.mjs
+public/pdf.mjs
+public/pdf.worker.mjs
