@@ -192,12 +192,12 @@ class PracticeGenerator {
     this.indexIterator = new IndexIterator();
   }
 
-  generate() {
+  async generate() {
     this.container.innerHTML = "";
-    this.addButton("🎲 Randomize", () => this.generate());
+    this.addButton("🎲 Randomize", async () => await this.generate());
     this.addSimpleButBeautiful();
     this.addScale();
-    this.addExcerpt();
+    await this.addExcerpt();
   }
 
   addSimpleButBeautiful() {
@@ -215,10 +215,17 @@ class PracticeGenerator {
     this.addProgressCheckbox();
   }
 
-  addExcerpt() {
+  async addExcerpt() {
     this.addTitle("Excerpt");
     this.addProgressCheckbox();
-    this.container.appendChild(generateExcerpt(this.random));
+    const div = document.createElement("div");
+    div.innerHTML = `
+        <div class="loading">
+          <span class="loader"></span>
+        </div>
+  `;
+    this.container.appendChild(div);
+    await generateExcerpt(div, this.random);
   }
 
   addTitle(title) {
@@ -353,41 +360,62 @@ const generatesScale = (firstNote, intervals, accidentals, octave) => {
 };
 
 const EXCERPTS = {
-  "Beethoven: Sonata, Op. 17": "https://www.hornmatters.com/solo-parts/Beethoven_-_Sonata_Op17_Horn.pdf",
-  "Cherubini: Sonata No. 2": "https://www.hornmatters.com/solo-parts/Cherubini-2_Sonatas_horn.pdf",
+  "Beethoven: Sonata, Op. 17": "https://xade.eu/music-library/horn-excerpts/Beethoven_-_Sonata_Op17_Horn.pdf",
+  "Cherubini: Sonata No. 2": "https://xade.eu/music-library/horn-excerpts/Cherubini-2_Sonatas_horn.pdf",
   "Mozart: Concerto No. 1 in D, K. 412":
-    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.1_horn_part.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Mozart-Horn_Concerto_No.1_horn_part.pdf",
   "Mozart: Concerto No. 2 in E-flat, K. 417":
-    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.2_horn_part.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Mozart-Horn_Concerto_No.2_horn_part.pdf",
   "Mozart: Concerto No. 3 in E-flat, K 447":
-    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.3_horn_part.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Mozart-Horn_Concerto_No.3_horn_part.pdf",
   "Mozart: Concerto No. 4 in E-flat, K. 495":
-    "https://www.hornmatters.com/solo-parts/Mozart-Horn_Concerto_No.4_horn_part.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Mozart-Horn_Concerto_No.4_horn_part.pdf",
   "Saint-Saens: Morceau de Concert":
-    "https://www.hornmatters.com/solo-parts/Saint-saens-Morceau_De_Concert_orig_horn.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Saint-saens-Morceau_De_Concert_orig_horn.pdf",
   "Schumann: Adagio and Allegro, Op. 70":
-    "https://www.hornmatters.com/solo-parts/Schumann_Adagio_and_Allegro_Op.70_parts.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Schumann_Adagio_and_Allegro_Op.70_parts.pdf",
   "Schumann: Konzertstuck for four horns and orchestra":
-    "https://www.hornmatters.com/solo-parts/Schumann_Concertpiece_for_4_Horns_Op.86_horns.pdf",
-  "Strauss, F.: Nocturno, Op. 7": "https://www.hornmatters.com/solo-parts/Strauss-F-Nocturno-Op-7-horn.pdf",
-  "Strauss, F.: Concerto, Op. 8": "https://www.hornmatters.com/solo-parts/Strauss-F-Concerto-Op-8-horn.pdf",
-  "Strauss, R.: Concerto No. 1, Op. 11": "https://www.hornmatters.com/solo-parts/Strauss-R-Concerto-Op-11-horn.pdf",
-  "Weber: Concertino in E": "https://www.hornmatters.com/solo-parts/Weber-Concertino__Op.45-Horn_Part.pdf",
+    "https://xade.eu/music-library/horn-excerpts/Schumann_Concertpiece_for_4_Horns_Op.86_horns.pdf",
+  "Strauss, F.: Nocturno, Op. 7": "https://xade.eu/music-library/horn-excerpts/Strauss-F-Nocturno-Op-7-horn.pdf",
+  "Strauss, F.: Concerto, Op. 8": "https://xade.eu/music-library/horn-excerpts/Strauss-F-Concerto-Op-8-horn.pdf",
+  "Strauss, R.: Concerto No. 1, Op. 11":
+    "https://xade.eu/music-library/horn-excerpts/Strauss-R-Concerto-Op-11-horn.pdf",
+  "Weber: Concertino in E": "https://xade.eu/music-library/horn-excerpts/Weber-Concertino__Op.45-Horn_Part.pdf",
 };
 
-const generateExcerpt = (random) => {
+const generateExcerpt = async (div, random) => {
   const [title, url] = random.choice(Object.entries(EXCERPTS));
-  const div = document.createElement("div");
-  div.innerHTML = `
-  <h3>${title}</h3>
-  <object data="${url}" type="application/pdf" width="100%" height="800px">
-        <div class="loading">
-          <span class="loader"></span>
-        </div>
-    </object>
-  `;
 
-  return div;
+  const { pdfjsLib } = globalThis;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://xade.eu/practice-generator/pdf.worker.js";
+  const loadingTask = pdfjsLib.getDocument(url);
+  const pdf = await loadingTask.promise;
+  div.innerHTML = "";
+  const h3 = document.createElement("h3");
+  h3.textContent = title;
+  div.appendChild(h3);
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+    const page = await pdf.getPage(pageNumber);
+
+    const scale = 2;
+    var viewport = page.getViewport({ scale: scale });
+
+    const canvas = document.createElement("canvas");
+
+    const context = canvas.getContext("2d");
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    canvas.style.width = "100%";
+    // Render PDF page into canvas context
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport,
+    };
+    const renderTask = page.render(renderContext);
+    await renderTask.promise;
+    div.appendChild(canvas);
+  }
 };
 
 const mod = (input, n) => ((input % n) + n) % n;
