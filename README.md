@@ -5,4 +5,3 @@ To deploy
 ```console
 op run -- make upload
 ```
-

@@ -17,4 +17,4 @@ upload:
 
 .PHONY: format
 format:
-	prettier --write public/main.js public/index.html --print-width 120
+	prettier --write . --print-width 120

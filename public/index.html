@@ -15,11 +15,9 @@
     <meta property="og:site_name" content="Practice Generator" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://xade.eu/practice-generator/preview.png" />
-
     <meta name="twitter:card" content="summary_large_image" />
     <meta property="twitter:title" content="Practice Generator" />
     <meta property="twitter:image" content="https://xade.eu/practice-generator/preview.png" />
-
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -36,96 +34,8 @@
     </script>
 
     <link href="simple.css" rel="stylesheet" type="text/css" />
-    <style>
-      :root {
-        --accent: rgb(47, 129, 247);
-        --accent-hover: rgb(73, 151, 255);
-      }
+    <link href="style.css" rel="stylesheet" type="text/css" />
 
-      .music-sheet {
-        color: black;
-        margin-bottom: 10px;
-        background-color: #eed;
-        padding: 10px;
-        border: 10px solid #ddc;
-        cursor: pointer;
-        width: 100%;
-        max-height: 200px;
-      }
-
-      .music-sheet svg {
-        width: 100% !important;
-      }
-
-      select {
-        width: 100%;
-      }
-
-      button {
-        width: 100%;
-      }
-
-      .loader {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        position: relative;
-        animation: rotate 1s linear infinite;
-      }
-
-      .loader::before,
-      .loader::after {
-        content: "";
-        box-sizing: border-box;
-        position: absolute;
-        inset: 0px;
-        border-radius: 50%;
-        border: 5px solid #fff;
-        animation: prixClipFix 2s linear infinite;
-      }
-
-      .loader::after {
-        border-color: #ff3d00;
-        animation:
-          prixClipFix 2s linear infinite,
-          rotate 0.5s linear infinite reverse;
-        inset: 6px;
-      }
-
-      @keyframes rotate {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
-      @keyframes prixClipFix {
-        0% {
-          clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0);
-        }
-        25% {
-          clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0);
-        }
-        50% {
-          clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%);
-        }
-        75% {
-          clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%);
-        }
-        100% {
-          clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0);
-        }
-      }
-
-      .loading {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
-    </style>
     <script src="vexflow@4.2.3.js"></script>
     <script src="pdf.js" type="module"></script>
     <script src="main.js"></script>

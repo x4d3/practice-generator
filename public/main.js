@@ -1,7 +1,7 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = document.getElementById("app");
   const dayIndex = dateToIndex(new Date());
-  new PracticeGenerator(app, dayIndex).generate();
+  await new PracticeGenerator(app, dayIndex).generate();
 });
 
 const DAY_OFFSET = 20000;
@@ -266,7 +266,7 @@ const generateSimpleButBeautiful = (index) => {
   if (shift > 4) {
     shift -= 7;
   }
-  const indexes = [0, -1, -2, -1, 0, 1, 2, 3, 4, 5, 4, 3, 2, 1, 0, -1, -2, -1, 0].map((i) => shift + i);
+  const indexes = [0, -1, -2, -1, 0, 1, 2, 3, 4, 3, 2, 1, 0, -1, -2, -1, 0].map((i) => shift + i);
 
   const notes = indexes.map((index) => {
     const octave = Math.floor(index / 7) + 4;
@@ -289,7 +289,7 @@ const generateScaleSheet = (scale, index) => {
   const key = getKey(relativeIndex);
   const { accidentals } = ALL_KEYS[key];
   let firstNote = safeArrayAccess(ALL_KEYS_ARRAY, index + ALL_KEYS[startNote].int_val);
-  const octave = ALL_KEYS[firstNote].int_val > 4 ? 3 : 4;
+  const octave = 3;
 
   if (isFlat(firstNote) && accidentals.some(isSharp)) {
     firstNote = ALL_KEYS[firstNote].equivalent;
